@@ -1,6 +1,6 @@
 # Invoice
 
-**Course From [Undemy](www.udemy.com), Learning Elixir to an application with PHOENIX**
+**Course From [Udemy](https://www.udemy.com/), Learning Elixir to an application with PHOENIX**
 
 * Fists Steps
   - Knowing the language
