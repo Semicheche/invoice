@@ -1,0 +1,159 @@
+{% set qty_item_table = 10 %}
+{% set items_length = doc.items|length %}
+
+<!-- BLOCK: header -->
+{%- macro add_header() -%}
+<div class="row">      
+    <div class="col-xs-6">            
+        <div class="row">
+            <div class="col-xs-5 text-right"><label>Customer Name</label></div>
+            <div class="col-xs-7 ">{{ doc.customer }} </div>
+        </div> 
+        <div class="row">
+            <div class="col-xs-5 text-right"> <label>Date</label> </div>
+            <div class="col-xs-7 ">
+                {{ doc.get_formatted("posting_date") or '' }}</div>
+        </div>       
+    </div>
+    <div class="col-xs-6">            
+        <div class="row">
+            <div class="col-xs-5 text-right"><label>Delivery Note</label></div>
+            <div class="col-xs-7 ">{{ doc.name }} </div>
+        </div>
+    </div>      
+</div>
+{%- endmacro -%}
+
+<!-- BLOCK: footer -->
+{%- macro add_footer() -%}
+<div class="col-xs-12">
+    <div class="row">
+        <label id="obs">Obs.:</label>
+        <input type="text" labelFor="obs" class="col-xs-12" style="padding-top: 10px; padding-bottom: 10px;"></input>
+    </div>
+    <div style="margin-bottom: 20px;"></div>
+</div>  
+{%- endmacro -%}
+
+<!-- BLOCK: space line -->
+{%- macro add_line_space(total_line) -%}
+    {% if total_line < qty_item_table %}
+        {% set dif_line =  qty_item_table - total_line %}
+        {% set unit = "px" %}
+        <div id="space-id" style="margin-top:{{ (dif_line * 18 ) }}{{unit}};"></div>
+    {% endif %}
+{%- endmacro -%}
+
+<!-- BLOCK: print row -->
+{%- macro print_item(row) -%}
+<tr>
+    <td style="width:20%;">{{ row.item_code }}</td>
+    <td style="width:15%;">{{ row.description }}</td>
+    <td style="width:15%;">{{ row.warehouse }}</td>
+    <td style="width:40%; text-align:right;">
+        {{row.uom}} {{ row.quantity }}
+    </td>
+</tr>
+{%- endmacro -%}
+
+<!-- BLOCK: calculate totals -->
+{%- macro calculate_totals() -%}
+    {% set totals = doc | calculate_total_uoms %}
+    {% for uom_total in totals %}   
+    <tr>
+        <td></td>
+        <td></td>
+        <td style="text-align:right">TOTALS</td>
+        <td style="text-align:right">{{uom_total}} {{totals[uom_total]["qty"]}}</td>
+    </tr>
+{% endfor %}
+{%- endmacro -%}
+
+<!-- BLOCK: main -->
+{% if items_length <= qty_item_table %}
+
+    {{ add_header() }}
+
+    <div style="margin-top:20px;"></div>
+    <table class="table table-condensed table-hover table-bordered">
+        <tr>
+            <th>Code</th>
+            <th>Item</th>
+            <th>Warehouse</th>
+            <th class="text-right">Quantity</th>
+        </tr>    
+        
+        {% for row in doc.items %}
+            {{ print_item(row) }}
+        {% endfor %}
+        {{ calculate_totals() }}
+
+    </table>
+
+    {{ add_line_space(items_length) }}
+    {{ add_footer() }}
+
+{% else %}
+    <!-- BLOCK: page break -->
+    {% if (items_length <= (qty_item_table*2)) %}
+        {% set page_size = 2 %}
+    {% elif (items_length % qty_item_table == 0) %}
+        {% set page_size = items_length // qty_item_table %}
+    {% else %}
+        {% set page_size = (items_length // qty_item_table)+1 %}
+    {% endif %}
+
+    {% for inv in range(1, (page_size + 1)) %}
+        {% if inv < page_size + 1 %}
+        <div class="page-break">
+
+            {{ add_header() }}
+
+            <table class="table table-condensed table-hover table-bordered">
+                <tr>
+                    <th>Code</th>
+                    <th>Item</th>
+                    <th class="text-right">Quantity</th>
+                </tr>
+
+                {% set total_cant = [0] %} 
+
+                {% for i in range((inv * qty_item_table)-qty_item_table, (inv * qty_item_table)) if i <= (items_length-1)  %}
+                    {{ print_item(doc.items[i]) }}
+                    {% set _ = total_cant.append(total_cant.pop() + 1) %}
+                {% endfor %}
+
+                {{ calculate_totals() }}
+            </table>
+
+            {{ add_line_space(total_cant[0]) }}
+
+            {{ add_footer() }}
+
+        </div>
+        {% endif %}
+    {% endfor %}
+
+{% endif %}
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 95%;
+        vertical-align: top;
+        border-style: none !important;
+        font-size: 8px !important;
+        line-height: 0.9;
+    }
+
+    .row .section-break {
+       margin: 0px !important;
+       padding: 0px !important;
+    }
+
+    .print-format {
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-top: 30px;
+    }
+</style>    
