@@ -1,6 +1,15 @@
 # Invoice
 
-**TODO: Add description**
+**Course From [Undemy](www.udemy.com), Learning Elixir to an application with PHOENIX**
+
+* Fists Steps
+  - Knowing the language
+  - Using mix
+  - Doctest
+  - Unit tests
+  - Make `defmodule`
+  - Make `defstruct`
+
 
 ## Installation
 
